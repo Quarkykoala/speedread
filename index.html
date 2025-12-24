@@ -13,16 +13,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --gradient-pink: #FF6B9D;
-      --gradient-coral: #FF7043;
-      --gradient-orange: #FF9800;
-      --glass-bg: rgba(0, 0, 0, 0.6);
-      --glass-border: rgba(255, 107, 157, 0.15);
+      --gradient-pink: #7aa89b;
+      --gradient-coral: #9fa56a;
+      --gradient-orange: #c49b68;
+      --glass-bg: rgba(14, 13, 11, 0.7);
+      --glass-border: rgba(233, 227, 215, 0.08);
+      --page-bg: #0d0b08;
+      --page-text: #e9e3d7;
+      --muted-text: rgba(233, 227, 215, 0.7);
     }
 
     body {
       font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      background: #000;
+      background: var(--page-bg);
+      color: var(--page-text);
     }
 
     .font-mono {
@@ -54,8 +58,8 @@
     }
 
     .gradient-glow {
-      box-shadow: 0 0 30px rgba(255, 107, 157, 0.3),
-        0 0 60px rgba(255, 112, 67, 0.2);
+      box-shadow: 0 0 24px rgba(122, 168, 155, 0.18),
+        0 0 48px rgba(196, 155, 104, 0.12);
     }
 
     @keyframes pulse-glow {
@@ -96,12 +100,17 @@
     }
 
     ::-webkit-scrollbar-thumb {
-      background: rgba(255, 107, 157, 0.3);
+      background: rgba(122, 168, 155, 0.28);
       border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 107, 157, 0.5);
+      background: rgba(122, 168, 155, 0.45);
+    }
+
+    ::selection {
+      background: rgba(122, 168, 155, 0.35);
+      color: #f6f1e7;
     }
 
     input[type="range"] {
@@ -140,7 +149,7 @@
     </script>
 </head>
 
-<body class="bg-black text-white antialiased selection:bg-pink-500/30 selection:text-white">
+<body class="antialiased">
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
