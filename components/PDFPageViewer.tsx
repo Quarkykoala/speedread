@@ -20,6 +20,9 @@ export const PDFPageViewer: React.FC<PDFPageViewerProps> = ({
   const [pdfDoc, setPdfDoc] = useState<any>(null);
   // Force re-render on window resize if in fit mode
   const [resizeTrigger, setResizeTrigger] = useState(0);
+  const containerClassName = className
+    ? `w-full ${className}`
+    : "w-full bg-slate-900 flex justify-center p-2 rounded-lg border border-slate-700 overflow-hidden";
 
   // 1. Load the PDF Document only when fileData changes
   useEffect(() => {
@@ -78,10 +81,10 @@ export const PDFPageViewer: React.FC<PDFPageViewerProps> = ({
 
         // --- High DPI Rendering Logic ---
         const dpr = window.devicePixelRatio || 1;
-        
+
         // Get unscaled viewport to measure aspect ratio
         const unscaledViewport = page.getViewport({ scale: 1 });
-        
+
         let displayScale = 1;
 
         if (scale === 'fit') {
@@ -92,16 +95,16 @@ export const PDFPageViewer: React.FC<PDFPageViewerProps> = ({
           displayScale = scale;
         }
 
-        // The critical fix: Render at high resolution (scale * dpr), display at CSS size (scale)
-        const outputScale = displayScale * dpr;
-        const viewport = page.getViewport({ scale: outputScale });
+        // Render at CSS scale, then use DPR to boost pixel density
+        const viewport = page.getViewport({ scale: displayScale });
+        const outputScale = dpr;
 
-        canvas.width = Math.floor(viewport.width);
-        canvas.height = Math.floor(viewport.height);
+        canvas.width = Math.floor(viewport.width * outputScale);
+        canvas.height = Math.floor(viewport.height * outputScale);
 
-        // Force CSS to match the logical display size (undoing the dpr multiplication)
-        canvas.style.width = `${Math.floor(viewport.width / dpr)}px`;
-        canvas.style.height = `${Math.floor(viewport.height / dpr)}px`;
+        // Force CSS to match the logical display size
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = `${Math.floor(viewport.height)}px`;
 
         const renderContext = {
           canvasContext: context,
@@ -130,8 +133,8 @@ export const PDFPageViewer: React.FC<PDFPageViewerProps> = ({
   if (!fileData) return null;
 
   return (
-    <div 
-      className={className || "w-full bg-slate-900 flex justify-center p-2 rounded-lg border border-slate-700 overflow-hidden"}
+    <div
+      className={containerClassName}
       onClick={onClick}
     >
       <canvas ref={canvasRef} className="shadow-lg" />

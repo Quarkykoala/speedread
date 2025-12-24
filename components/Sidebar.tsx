@@ -312,11 +312,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {/* PDF Content - Scrollable Area */}
               <div className="flex-1 overflow-auto bg-slate-950 relative">
                  <div className={`min-h-full p-8 flex flex-col items-center ${zoomLevel === 'fit' ? 'w-full' : 'w-max min-w-full'}`}>
-                    <PDFPageViewer 
-                      fileData={currentPDFData} 
-                      pageNumber={currentPage} 
+                    <PDFPageViewer
+                      fileData={currentPDFData}
+                      pageNumber={currentPage}
                       scale={zoomLevel}
-                      className="shadow-2xl max-w-none shrink-0"
+                      className="flex justify-center bg-slate-950 shadow-2xl max-w-none shrink-0"
                     />
                  </div>
               </div>
