@@ -50,11 +50,11 @@ export const ReaderDisplay: React.FC<ReaderDisplayProps> = ({
       )}
 
       {/* Gradient Accent Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-transparent via-pink-500/50 to-transparent blur-sm"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent blur-sm"></div>
 
       {/* Guides */}
-      <div className={`absolute top-4 bottom-4 w-px left-1/2 transform -translate-x-1/2 transition-colors ${isTechnical ? 'bg-pink-500/20' : 'bg-white/10'}`}></div>
-      <div className={`absolute left-4 right-4 h-px top-1/2 transform -translate-y-1/2 transition-colors ${isTechnical ? 'bg-pink-500/20' : 'bg-white/10'}`}></div>
+      <div className={`absolute top-4 bottom-4 w-px left-1/2 transform -translate-x-1/2 transition-colors ${isTechnical ? 'bg-emerald-400/20' : 'bg-white/10'}`}></div>
+      <div className={`absolute left-4 right-4 h-px top-1/2 transform -translate-y-1/2 transition-colors ${isTechnical ? 'bg-emerald-400/20' : 'bg-white/10'}`}></div>
 
       {/* Context Words for Technical Mode */}
       {isTechnical && word && (
@@ -84,7 +84,7 @@ export const ReaderDisplay: React.FC<ReaderDisplayProps> = ({
 
       {/* Technical Mode Indicator */}
       {isTechnical && (
-        <div className="absolute top-4 right-4 text-xs font-mono text-pink-400 border border-pink-500/30 px-2 py-1 rounded-full bg-pink-900/20 backdrop-blur-sm">
+        <div className="absolute top-4 right-4 text-xs font-mono text-emerald-300 border border-emerald-400/30 px-2 py-1 rounded-full bg-emerald-900/20 backdrop-blur-sm">
           TECHNICAL MODE
         </div>
       )}
@@ -117,3 +117,4 @@ export const ReaderDisplay: React.FC<ReaderDisplayProps> = ({
     </div>
   );
 };
+

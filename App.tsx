@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ReaderDisplay } from './components/ReaderDisplay';
 import { ControlPanel } from './components/ControlPanel';
 import { Sidebar } from './components/Sidebar';
-import { ParticleVortex } from './components/ParticleVortex';
 import { DocumentMapItem, PDFMetadata, ReadingMode, WordItem } from './types';
 
 const DEFAULT_TEXT_OBJ: WordItem[] = "Welcome to HyperRead AI. Upload a PDF or paste text to begin speed reading. Switch to Technical Mode for adaptive pacing and visual context syncing.".split(' ').map(w => ({ text: w, page: 1 }));
@@ -147,8 +146,6 @@ function App() {
 
   return (
     <div className="relative flex flex-col lg:flex-row h-screen bg-black text-white overflow-hidden">
-      {/* Particle Background */}
-      <ParticleVortex />
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col p-4 md:p-8 relative z-10">

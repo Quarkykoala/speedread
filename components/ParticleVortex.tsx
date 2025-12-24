@@ -14,14 +14,14 @@ interface Particle {
 
 const PARTICLE_COUNT = 800;
 const COLORS = [
-  '#FF6B9D', // Pink
-  '#FF8A80', // Light coral
-  '#FF7043', // Deep coral
-  '#FF9800', // Orange
-  '#FFB74D', // Light orange
-  '#F06292', // Rose
-  '#EC407A', // Magenta pink
-  '#FF5252', // Red accent
+  '#7AA89B', // Sage
+  '#9FA56A', // Olive
+  '#C49B68', // Sand
+  '#D4B48A', // Light sand
+  '#89B0A4', // Pale teal
+  '#6F8F86', // Deep sage
+  '#B59B7B', // Warm taupe
+  '#A77A5A', // Clay
 ];
 
 export const ParticleVortex: React.FC = () => {
@@ -160,7 +160,7 @@ export const ParticleVortex: React.FC = () => {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 z-0 pointer-events-none"
-      style={{ background: '#000' }}
+      style={{ background: 'transparent' }}
     />
   );
 };

@@ -141,7 +141,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Header */}
       <div className="p-6 pb-4 border-b border-white/10">
         <h2 className="text-xl font-bold text-white flex items-center mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
           <span className="gradient-text" style={{ WebkitTextFillColor: 'transparent', background: 'linear-gradient(135deg, #FF6B9D, #FF7043, #FF9800)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>HyperRead AI</span>
@@ -182,7 +182,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {activeTab === 'upload' && (
           <div className="space-y-4">
             <label className="block mb-2 text-sm font-medium text-white/70">Upload Document</label>
-            <div className="relative border-2 border-dashed border-white/20 rounded-xl p-8 hover:border-pink-500/50 transition-all bg-black/20 text-center group">
+            <div className="relative border-2 border-dashed border-white/20 rounded-xl p-8 hover:border-emerald-400/30 transition-all bg-black/20 text-center group">
               <input
                 type="file"
                 accept=".pdf"
@@ -191,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               />
               {isLoading ? (
                 <div className="flex flex-col items-center">
-                  <svg className="animate-spin h-8 w-8 text-pink-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-8 w-8 text-emerald-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -199,7 +199,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white/30 mb-2 group-hover:text-pink-500/60 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white/30 mb-2 group-hover:text-emerald-300/70 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                   <span className="text-sm text-white/50 font-medium group-hover:text-white/70 transition-colors">{fileName || "Drop PDF or Click"}</span>
@@ -219,14 +219,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {!currentPDFData ? (
               <div className="flex flex-col items-center justify-center h-40 text-white/40">
                 <p>No document loaded.</p>
-                <button onClick={() => setActiveTab('upload')} className="text-pink-400 text-sm mt-2 hover:underline">Go to upload</button>
+                <button onClick={() => setActiveTab('upload')} className="text-emerald-300 text-sm mt-2 hover:underline">Go to upload</button>
               </div>
             ) : (
               <div className="flex-1 flex flex-col space-y-2">
                 <div className="flex justify-between items-center text-xs text-white/50 uppercase tracking-wide font-bold">
                   <span>Visual Context</span>
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs text-pink-400 cursor-pointer hover:underline" onClick={() => setIsExpanded(true)}>
+                    <span className="text-xs text-emerald-300 cursor-pointer hover:underline" onClick={() => setIsExpanded(true)}>
                       Expand View
                     </span>
                     <span className="bg-white/10 px-2 py-0.5 rounded-full text-white">Page {currentPage}</span>
@@ -234,7 +234,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
 
                 {/* Sidebar Preview */}
-                <div className="flex-1 bg-black/40 rounded-xl border border-white/10 overflow-hidden relative group cursor-pointer shadow-lg transition-all hover:border-pink-500/30" onClick={() => setIsExpanded(true)}>
+                <div className="flex-1 bg-black/40 rounded-xl border border-white/10 overflow-hidden relative group cursor-pointer shadow-lg transition-all hover:border-emerald-400/30" onClick={() => setIsExpanded(true)}>
                   <div className="absolute inset-0 overflow-auto flex items-start justify-center p-4 no-scrollbar">
                     <PDFPageViewer
                       fileData={currentPDFData}
@@ -275,7 +275,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span>Skim Map</span>
                   <button
                     onClick={onClearPageOverride}
-                    className="text-pink-400 hover:underline text-xs"
+                    className="text-emerald-300 hover:underline text-xs"
                   >
                     Follow Reader
                   </button>
@@ -291,7 +291,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         onRequestPage(item.page);
                         setActiveTab('context');
                       }}
-                      className="w-full text-left bg-black/30 border border-white/10 rounded-xl px-3 py-2 hover:border-pink-500/30 transition-all"
+                      className="w-full text-left bg-black/30 border border-white/10 rounded-xl px-3 py-2 hover:border-emerald-400/30 transition-all"
                     >
                       <div className="flex items-center justify-between text-xs text-white/40">
                         <span className="uppercase tracking-wide">{item.type}</span>
@@ -330,11 +330,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ) : (
                 <div className="space-y-4 animate-fadeIn">
                   <div>
-                    <h4 className="text-pink-400 text-xs font-bold uppercase mb-1">Summary</h4>
+                    <h4 className="text-emerald-300 text-xs font-bold uppercase mb-1">Summary</h4>
                     <p className="text-white/80 text-sm leading-relaxed">{analysis.summary}</p>
                   </div>
                   <div>
-                    <h4 className="text-pink-400 text-xs font-bold uppercase mb-1">Key Points</h4>
+                    <h4 className="text-emerald-300 text-xs font-bold uppercase mb-1">Key Points</h4>
                     <ul className="list-disc list-inside text-white/80 text-sm space-y-1">
                       {analysis.keyPoints.map((point, idx) => (
                         <li key={idx} className="leading-snug">{point}</li>
@@ -379,7 +379,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   value={chatInput}
                   onChange={(event) => setChatInput(event.target.value)}
                   placeholder={currentText ? "Ask a question..." : "Upload a PDF to chat"}
-                  className="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-500/50 placeholder:text-white/30"
+                  className="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-400/40 placeholder:text-white/30"
                   disabled={!currentText || isChatting}
                 />
                 <button
@@ -406,7 +406,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
               <div className="flex items-center space-x-4">
                 <h3 className="text-lg font-bold text-white flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   Page {currentPage}
@@ -472,3 +472,4 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </div>
   );
 };
+

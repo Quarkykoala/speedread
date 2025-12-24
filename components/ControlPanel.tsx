@@ -128,7 +128,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             />
             <div className="flex justify-between text-xs text-white/40 mt-1">
               <span>60</span>
-              <span className="gradient-text font-bold" style={{ WebkitTextFillColor: 'transparent', background: 'linear-gradient(135deg, #FF6B9D, #FF7043)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}>{wpm} WPM</span>
+              <span className="gradient-text font-bold">{wpm} WPM</span>
               <span>1000</span>
             </div>
           </div>
