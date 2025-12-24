@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ReaderDisplay } from './components/ReaderDisplay';
 import { ControlPanel } from './components/ControlPanel';
 import { Sidebar } from './components/Sidebar';
+import { ParticleVortex } from './components/ParticleVortex';
 import { DocumentMapItem, PDFMetadata, ReadingMode, WordItem } from './types';
 
 const DEFAULT_TEXT_OBJ: WordItem[] = "Welcome to HyperRead AI. Upload a PDF or paste text to begin speed reading. Switch to Technical Mode for adaptive pacing and visual context syncing.".split(' ').map(w => ({ text: w, page: 1 }));
@@ -12,14 +13,14 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [wpm, setWpm] = useState(300);
   const [mode, setMode] = useState<ReadingMode>('normal');
-  
+
   // State for Context Viewing
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
   const [fullRawText, setFullRawText] = useState<string>("");
   const [mapItems, setMapItems] = useState<DocumentMapItem[]>([]);
   const [figureIndex, setFigureIndex] = useState<Record<string, number>>({});
   const [manualContextPage, setManualContextPage] = useState<number | null>(null);
-  
+
   const timerRef = useRef<number | null>(null);
 
   const startReader = useCallback(() => {
@@ -65,7 +66,7 @@ function App() {
     setFigureIndex(metadata.figureIndex);
     setManualContextPage(null);
     resetReader();
-    setMode('technical'); // Auto-switch to technical mode for PDFs
+    setMode('technical');
   };
 
   const scoreWordDifficulty = useCallback((word: string, readingMode: ReadingMode) => {
@@ -93,23 +94,17 @@ function App() {
     return figureIndex[match[1]] ?? null;
   }, [figureIndex]);
 
-  // Adaptive Speed Logic Calculation
   const calculateDelay = useCallback((item: WordItem, baseWpm: number, mode: ReadingMode) => {
     let baseDelay = 60000 / baseWpm;
     const word = item.text;
     const difficulty = scoreWordDifficulty(word, mode);
 
     if (mode === 'technical' && word) {
-      // Chunk length penalty (longer chunks like "1,200 kg" take longer to read)
       if (word.length > 8) baseDelay *= 1.3;
       if (word.length > 13) baseDelay *= 1.6;
-      
-      // Pattern recognition for data
-      if (/[0-9]/.test(word)) baseDelay *= 1.4; // Numbers take cognitive load
-      if (/%|\$|€|kg|mg|cm/.test(word)) baseDelay *= 1.2; // Units
-      if (/Fig\.|Tab\.|Eq\./.test(word)) baseDelay *= 1.5; // References        
-
-      // Punctuation pauses
+      if (/[0-9]/.test(word)) baseDelay *= 1.4;
+      if (/%|\$|€|kg|mg|cm/.test(word)) baseDelay *= 1.2;
+      if (/Fig\.|Tab\.|Eq\./.test(word)) baseDelay *= 1.5;
       if (/[.;:!?]$/.test(word)) baseDelay *= 2.2;
       if (/,$/.test(word)) baseDelay *= 1.5;
     }
@@ -119,7 +114,6 @@ function App() {
     return baseDelay;
   }, [scoreWordDifficulty]);
 
-  // The Core Loop
   useEffect(() => {
     if (!isPlaying) return;
 
@@ -141,11 +135,8 @@ function App() {
     };
   }, [isPlaying, currentIndex, wpm, mode, words, calculateDelay]);
 
-  // Derived state
   const progress = words.length > 0 ? (currentIndex / words.length) * 100 : 0;
   const currentWordItem = words[currentIndex];
-  
-  // Safe accessors for display
   const currentWordText = currentWordItem?.text || "";
   const prevWordText = words[currentIndex - 1]?.text || "";
   const nextWordText = words[currentIndex + 1]?.text || "";
@@ -155,12 +146,14 @@ function App() {
   const difficulty = scoreWordDifficulty(currentWordText, mode);
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-slate-900 text-slate-100 overflow-hidden">
-      
+    <div className="relative flex flex-col lg:flex-row h-screen bg-black text-white overflow-hidden">
+      {/* Particle Background */}
+      <ParticleVortex />
+
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col p-4 md:p-8 relative">
+      <main className="flex-1 flex flex-col p-4 md:p-8 relative z-10">
         <header className="absolute top-4 left-8 lg:hidden">
-          <h1 className="text-xl font-bold text-slate-100">HyperRead AI</h1>
+          <h1 className="text-xl font-bold gradient-text">HyperRead AI</h1>
         </header>
 
         <div className="flex-1 flex items-center justify-center max-w-5xl mx-auto w-full">
@@ -176,7 +169,7 @@ function App() {
         </div>
 
         <div className="mt-8 max-w-5xl mx-auto w-full">
-          <ControlPanel 
+          <ControlPanel
             wpm={wpm}
             setWpm={setWpm}
             progress={progress}
