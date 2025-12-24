@@ -27,6 +27,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [analysis, setAnalysis] = useState<AIAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // 'fit' means auto-width, otherwise a specific number like 1.5 (150%)
+  const [zoomLevel, setZoomLevel] = useState<number | 'fit'>('fit');
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -67,6 +71,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+  const adjustZoom = (delta: number) => {
+    setZoomLevel(prev => {
+      let current = prev === 'fit' ? 1.0 : prev;
+      const next = Math.max(0.5, Math.min(3.0, current + delta));
+      return next;
+    });
+  };
+
+  const handleExpandClose = () => {
+    setIsExpanded(false);
+    setZoomLevel('fit'); // Reset zoom on close
+  };
+
   return (
     <div className="w-full lg:w-[450px] bg-slate-800 border-l border-slate-700 flex flex-col h-full">
       {/* Header */}
@@ -101,7 +118,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-6 relative">
         
         {/* TAB: UPLOAD */}
         {activeTab === 'upload' && (
@@ -150,11 +167,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="flex-1 flex flex-col space-y-2">
                  <div className="flex justify-between items-center text-xs text-slate-400 uppercase tracking-wide font-bold">
                    <span>Visual Context</span>
-                   <span className="bg-slate-700 px-2 py-0.5 rounded text-white">Page {currentPage}</span>
+                   <div className="flex items-center space-x-2">
+                      <span className="text-xs text-indigo-400 cursor-pointer hover:underline" onClick={() => setIsExpanded(true)}>
+                        Expand View
+                      </span>
+                      <span className="bg-slate-700 px-2 py-0.5 rounded text-white">Page {currentPage}</span>
+                   </div>
                  </div>
-                 <div className="flex-1 bg-slate-900 rounded-lg border border-slate-700 overflow-hidden relative">
-                   <div className="absolute inset-0 overflow-auto flex items-start justify-center p-4">
-                     <PDFPageViewer fileData={currentPDFData} pageNumber={currentPage} />
+                 
+                 {/* Sidebar Preview */}
+                 <div className="flex-1 bg-slate-900 rounded-lg border border-slate-700 overflow-hidden relative group cursor-pointer shadow-md transition-shadow hover:shadow-indigo-500/20" onClick={() => setIsExpanded(true)}>
+                   <div className="absolute inset-0 overflow-auto flex items-start justify-center p-4 no-scrollbar">
+                     <PDFPageViewer 
+                        fileData={currentPDFData} 
+                        pageNumber={currentPage} 
+                        scale='fit'
+                        className="w-full h-auto bg-slate-900 flex justify-center p-2 rounded-lg"
+                     />
+                   </div>
+                   
+                   {/* Hover Overlay */}
+                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="bg-slate-900/90 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center shadow-xl border border-slate-700 backdrop-blur-sm transform transition-transform group-hover:scale-105">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                        Click to Expand
+                      </div>
                    </div>
                  </div>
                  <p className="text-xs text-slate-500 text-center mt-2">
@@ -208,8 +247,82 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
         )}
-
       </div>
+
+       {/* EXPANDED MODAL OVERLAY */}
+       {isExpanded && currentPDFData && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 md:p-8 animate-fadeIn" onClick={handleExpandClose}>
+            <div 
+              className="relative w-full max-w-6xl h-full max-h-full bg-slate-900 rounded-xl shadow-2xl overflow-hidden border border-slate-700 flex flex-col"
+              onClick={(e) => e.stopPropagation()} 
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-850 shrink-0">
+                <div className="flex items-center space-x-4">
+                  <h3 className="text-lg font-bold text-white flex items-center">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                     </svg>
+                     Page {currentPage}
+                  </h3>
+                  
+                  {/* Zoom Controls */}
+                  <div className="flex items-center bg-slate-800 rounded-lg border border-slate-700 p-0.5">
+                    <button 
+                      onClick={() => adjustZoom(-0.25)}
+                      className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-white"
+                      title="Zoom Out"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                      </svg>
+                    </button>
+                    <span className="px-3 text-xs font-mono text-slate-300 min-w-[3rem] text-center">
+                      {zoomLevel === 'fit' ? 'Auto' : `${Math.round(zoomLevel * 100)}%`}
+                    </span>
+                    <button 
+                      onClick={() => adjustZoom(0.25)}
+                      className="p-1.5 hover:bg-slate-700 rounded text-slate-400 hover:text-white"
+                      title="Zoom In"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                    <div className="w-px h-4 bg-slate-700 mx-1"></div>
+                    <button 
+                      onClick={() => setZoomLevel('fit')}
+                      className={`px-2 py-1 text-xs font-medium rounded ${zoomLevel === 'fit' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      Fit Width
+                    </button>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={handleExpandClose}
+                  className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* PDF Content - Scrollable Area */}
+              <div className="flex-1 overflow-auto bg-slate-950 relative">
+                 <div className={`min-h-full p-8 flex flex-col items-center ${zoomLevel === 'fit' ? 'w-full' : 'w-max min-w-full'}`}>
+                    <PDFPageViewer 
+                      fileData={currentPDFData} 
+                      pageNumber={currentPage} 
+                      scale={zoomLevel}
+                      className="shadow-2xl max-w-none shrink-0"
+                    />
+                 </div>
+              </div>
+            </div>
+         </div>
+       )}
     </div>
   );
 };
