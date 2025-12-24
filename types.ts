@@ -1,7 +1,12 @@
 export type ReadingMode = 'normal' | 'technical';
 
+export interface WordItem {
+  text: string;
+  page: number; // The PDF page this word belongs to
+}
+
 export interface ReaderState {
-  words: string[];
+  words: WordItem[];
   currentIndex: number;
   isPlaying: boolean;
   wpm: number;
@@ -11,7 +16,9 @@ export interface ReaderState {
 export interface PDFMetadata {
   title: string;
   totalPages: number;
-  content: string; // Extracted raw text
+  words: WordItem[]; // Changed from simple string to structured items
+  rawContent: string; // For AI analysis
+  fileData: ArrayBuffer; // To render the visual PDF
 }
 
 export interface AIAnalysis {
@@ -20,7 +27,6 @@ export interface AIAnalysis {
   estimatedReadingTime: string;
 }
 
-// PDF.js types for window object since we load via CDN
 declare global {
   interface Window {
     pdfjsLib: any;
