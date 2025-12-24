@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { extractTextFromPDF } from '../services/pdfService';
-import { analyzeText } from '../services/geminiService';
+import { analyzeText, askQuestion } from '../services/geminiService';
 import { DocumentMapItem, PDFMetadata, AIAnalysis, ReadingMode } from '../types';
 import { PDFPageViewer } from './PDFPageViewer';
 
@@ -34,6 +34,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatting, setIsChatting] = useState(false);
   
   // 'fit' means auto-width, otherwise a specific number like 1.5 (150%)
   const [zoomLevel, setZoomLevel] = useState<number | 'fit'>('fit');
@@ -74,6 +77,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
       console.error(err);
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleChatSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const question = chatInput.trim();
+    if (!question || !currentText || isChatting) return;
+
+    setChatInput('');
+    setIsChatting(true);
+    setChatMessages((prev) => [...prev, { role: 'user', content: question }]);
+    try {
+      const response = await askQuestion(currentText, question, mode);
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: response }]);
+    } finally {
+      setIsChatting(false);
     }
   };
 
@@ -301,6 +320,50 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               )}
             </div>
+
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                  Ask the document
+                </h4>
+                <span className="text-xs text-slate-500">Chat uses current PDF text</span>
+              </div>
+              <div className="bg-slate-900/60 border border-slate-700 rounded-lg p-3 h-48 overflow-y-auto space-y-3">
+                {chatMessages.length === 0 ? (
+                  <div className="text-slate-500 text-xs text-center mt-6 italic">
+                    Ask a question about this document and get a concise answer.
+                  </div>
+                ) : (
+                  chatMessages.map((message, idx) => (
+                    <div
+                      key={`${message.role}-${idx}`}
+                      className={`text-sm ${message.role === 'user' ? 'text-slate-200 text-right' : 'text-slate-300'}`}
+                    >
+                      <span className={`inline-block rounded-lg px-3 py-2 ${message.role === 'user' ? 'bg-indigo-600/30 border border-indigo-500/40' : 'bg-slate-800 border border-slate-700'}`}>
+                        {message.content}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+              <form onSubmit={handleChatSubmit} className="mt-3 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(event) => setChatInput(event.target.value)}
+                  placeholder={currentText ? "Ask a question..." : "Upload a PDF to chat"}
+                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                  disabled={!currentText || isChatting}
+                />
+                <button
+                  type="submit"
+                  disabled={!currentText || isChatting}
+                  className="text-xs bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-700 disabled:text-slate-500 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  {isChatting ? "Asking..." : "Ask"}
+                </button>
+              </form>
+            </div>
           </div>
         )}
       </div>
@@ -382,3 +445,4 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </div>
   );
 };
+

@@ -67,3 +67,43 @@ export const analyzeText = async (text: string, mode: ReadingMode): Promise<AIAn
     };
   }
 };
+
+export const askQuestion = async (
+  text: string,
+  question: string,
+  mode: ReadingMode
+): Promise<string> => {
+  const truncatedText = text.slice(0, 20000);
+  const model = "gemini-3-flash-preview";
+  const styleHint = mode === 'technical'
+    ? "Answer as a concise technical tutor. Use bullet points when helpful."
+    : "Answer as a concise reading coach. Be direct and practical.";
+
+  const prompt = `
+    You are a helpful tutor.
+    ${styleHint}
+    Use the provided document excerpt as the only source of truth.
+    If the excerpt does not contain the answer, say so and suggest what to look for.
+
+    Document excerpt:
+    "${truncatedText}..."
+
+    Question: ${question}
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt
+    });
+
+    if (response.text) {
+      return response.text;
+    }
+
+    return "I did not receive a response. Please try again.";
+  } catch (error) {
+    console.error("Gemini Chat Error:", error);
+    return "Could not answer that. Please check your API key or try again.";
+  }
+};

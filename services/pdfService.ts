@@ -49,7 +49,13 @@ const groupLines = (items: any[]) => {
   });
 };
 
-const isLikelyHeading = (text: string, height: number, medianHeight: number) => {
+const isLikelyHeading = (
+  text: string,
+  height: number,
+  medianHeight: number,
+  p75Height: number,
+  p90Height: number
+) => {
   if (!text || text.length < 4) return false;
   const wordCount = text.split(' ').length;
   if (wordCount > 12 || text.length > 90) return false;
@@ -57,7 +63,13 @@ const isLikelyHeading = (text: string, height: number, medianHeight: number) => 
   const upperRatio = text.replace(/[^A-Z]/g, '').length / Math.max(letters.length, 1);
   const looksUpper = upperRatio > 0.6;
   const looksTitle = /^[A-Z][A-Za-z0-9]/.test(text);
-  return height >= medianHeight * 1.2 || looksUpper || looksTitle;
+  const sizeBoost = height >= p90Height
+    ? 2
+    : height >= p75Height
+      ? 1
+      : 0;
+  const isBig = height >= medianHeight * (sizeBoost ? 1.1 : 1.35);
+  return isBig || (looksUpper && height >= medianHeight) || looksTitle;
 };
 
 const tokenizeText = (text: string, pageNum: number): WordItem[] => {
@@ -141,6 +153,14 @@ export const extractTextFromPDF = async (file: File): Promise<PDFMetadata> => {
             itemHeights.length > 0
               ? itemHeights[Math.floor(itemHeights.length / 2)]
               : 0;
+          const p75Height =
+            itemHeights.length > 0
+              ? itemHeights[Math.floor(itemHeights.length * 0.75)]
+              : medianHeight;
+          const p90Height =
+            itemHeights.length > 0
+              ? itemHeights[Math.floor(itemHeights.length * 0.9)]
+              : p75Height;
 
           const lines = groupLines(textContent.items);
           for (const line of lines) {
@@ -157,7 +177,7 @@ export const extractTextFromPDF = async (file: File): Promise<PDFMetadata> => {
               continue;
             }
 
-            if (isLikelyHeading(line.text, line.height, medianHeight)) {
+            if (isLikelyHeading(line.text, line.height, medianHeight, p75Height, p90Height)) {
               mapItems.push({ type: 'heading', text: line.text, page: i });
             }
           }
