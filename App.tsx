@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ReaderDisplay } from './components/ReaderDisplay';
 import { ControlPanel } from './components/ControlPanel';
 import { Sidebar } from './components/Sidebar';
-import { ReadingMode, WordItem } from './types';
+import { DocumentMapItem, PDFMetadata, ReadingMode, WordItem } from './types';
 
 const DEFAULT_TEXT_OBJ: WordItem[] = "Welcome to HyperRead AI. Upload a PDF or paste text to begin speed reading. Switch to Technical Mode for adaptive pacing and visual context syncing.".split(' ').map(w => ({ text: w, page: 1 }));
 
@@ -16,6 +16,9 @@ function App() {
   // State for Context Viewing
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
   const [fullRawText, setFullRawText] = useState<string>("");
+  const [mapItems, setMapItems] = useState<DocumentMapItem[]>([]);
+  const [figureIndex, setFigureIndex] = useState<Record<string, number>>({});
+  const [manualContextPage, setManualContextPage] = useState<number | null>(null);
   
   const timerRef = useRef<number | null>(null);
 
@@ -23,6 +26,7 @@ function App() {
     if (currentIndex >= words.length) {
       setCurrentIndex(0);
     }
+    setManualContextPage(null);
     setIsPlaying(true);
   }, [currentIndex, words.length]);
 
@@ -53,19 +57,48 @@ function App() {
     setCurrentIndex(newIndex);
   };
 
-  const handleDocumentLoad = (newWords: WordItem[], rawText: string, fileData: ArrayBuffer) => {
-    setWords(newWords);
-    setFullRawText(rawText);
-    setPdfData(fileData);
+  const handleDocumentLoad = (metadata: PDFMetadata) => {
+    setWords(metadata.words);
+    setFullRawText(metadata.rawContent);
+    setPdfData(metadata.fileData);
+    setMapItems(metadata.mapItems);
+    setFigureIndex(metadata.figureIndex);
+    setManualContextPage(null);
     resetReader();
     setMode('technical'); // Auto-switch to technical mode for PDFs
   };
+
+  const scoreWordDifficulty = useCallback((word: string, readingMode: ReadingMode) => {
+    if (!word) return 0;
+    let score = 0;
+
+    if (word.length > 8) score += 0.15;
+    if (word.length > 13) score += 0.2;
+    if (/[0-9]/.test(word)) score += 0.2;
+    if (/%|\$|kg|mg|cm|mm|hz|khz|mhz|ghz/i.test(word)) score += 0.15;
+    if (/[<>=]/.test(word)) score += 0.2;
+    if (/Fig\.|Figure|Table|Tab\.|Eq\./.test(word)) score += 0.2;
+    if (/[();:]/.test(word)) score += 0.1;
+
+    if (readingMode === 'normal') {
+      score *= 0.6;
+    }
+
+    return Math.min(1, score);
+  }, []);
+
+  const getFigureReferencePage = useCallback((word: string) => {
+    const match = word.match(/(?:Fig\.|Figure|Table|Tab\.)\s*([0-9]+[a-z]?)/i);
+    if (!match) return null;
+    return figureIndex[match[1]] ?? null;
+  }, [figureIndex]);
 
   // Adaptive Speed Logic Calculation
   const calculateDelay = useCallback((item: WordItem, baseWpm: number, mode: ReadingMode) => {
     let baseDelay = 60000 / baseWpm;
     const word = item.text;
-    
+    const difficulty = scoreWordDifficulty(word, mode);
+
     if (mode === 'technical' && word) {
       // Chunk length penalty (longer chunks like "1,200 kg" take longer to read)
       if (word.length > 8) baseDelay *= 1.3;
@@ -74,15 +107,17 @@ function App() {
       // Pattern recognition for data
       if (/[0-9]/.test(word)) baseDelay *= 1.4; // Numbers take cognitive load
       if (/%|\$|€|kg|mg|cm/.test(word)) baseDelay *= 1.2; // Units
-      if (/Fig\.|Tab\.|Eq\./.test(word)) baseDelay *= 1.5; // References
-      
+      if (/Fig\.|Tab\.|Eq\./.test(word)) baseDelay *= 1.5; // References        
+
       // Punctuation pauses
       if (/[.;:!?]$/.test(word)) baseDelay *= 2.2;
       if (/,$/.test(word)) baseDelay *= 1.5;
     }
 
+    baseDelay *= 1 + difficulty * (mode === 'technical' ? 1.1 : 0.4);
+
     return baseDelay;
-  }, []);
+  }, [scoreWordDifficulty]);
 
   // The Core Loop
   useEffect(() => {
@@ -114,7 +149,10 @@ function App() {
   const currentWordText = currentWordItem?.text || "";
   const prevWordText = words[currentIndex - 1]?.text || "";
   const nextWordText = words[currentIndex + 1]?.text || "";
-  const currentPage = currentWordItem?.page || 1;
+  const figurePage = currentWordItem ? getFigureReferencePage(currentWordItem.text) : null;
+  const autoPage = figurePage ?? currentWordItem?.page ?? 1;
+  const currentPage = manualContextPage ?? autoPage;
+  const difficulty = scoreWordDifficulty(currentWordText, mode);
 
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-slate-900 text-slate-100 overflow-hidden">
@@ -126,13 +164,14 @@ function App() {
         </header>
 
         <div className="flex-1 flex items-center justify-center max-w-5xl mx-auto w-full">
-          <ReaderDisplay 
-            word={currentWordText} 
+          <ReaderDisplay
+            word={currentWordText}
             prevWord={prevWordText}
             nextWord={nextWordText}
-            isPlaying={isPlaying} 
+            isPlaying={isPlaying}
             onTogglePlay={togglePlay}
             mode={mode}
+            difficulty={difficulty}
           />
         </div>
 
@@ -154,12 +193,15 @@ function App() {
       </main>
 
       {/* Sidebar */}
-      <Sidebar 
-        onLoadDocument={handleDocumentLoad} 
+      <Sidebar
+        onLoadDocument={handleDocumentLoad}
         currentText={fullRawText}
         mode={mode}
         currentPDFData={pdfData}
         currentPage={currentPage}
+        mapItems={mapItems}
+        onRequestPage={(page) => setManualContextPage(page)}
+        onClearPageOverride={() => setManualContextPage(null)}
       />
     </div>
   );

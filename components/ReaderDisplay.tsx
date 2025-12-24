@@ -8,6 +8,7 @@ interface ReaderDisplayProps {
   isPlaying: boolean;
   onTogglePlay: () => void;
   mode: ReadingMode;
+  difficulty: number;
 }
 
 export const ReaderDisplay: React.FC<ReaderDisplayProps> = ({ 
@@ -16,7 +17,8 @@ export const ReaderDisplay: React.FC<ReaderDisplayProps> = ({
   nextWord,
   isPlaying, 
   onTogglePlay,
-  mode 
+  mode,
+  difficulty
 }) => {
   
   // Pivot logic: Find the "optical center" of the word
@@ -32,6 +34,7 @@ export const ReaderDisplay: React.FC<ReaderDisplayProps> = ({
   const rightPart = word ? word.slice(pivotIndex + 1) : '';
 
   const isTechnical = mode === 'technical';
+  const difficultyBars = Math.round(Math.min(1, Math.max(0, difficulty)) * 5);
 
   return (
     <div 
@@ -89,6 +92,17 @@ export const ReaderDisplay: React.FC<ReaderDisplayProps> = ({
           TECHNICAL MODE
         </div>
       )}
+
+      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center">
+        <div className="flex items-center space-x-1">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <span
+              key={index}
+              className={`h-1.5 w-6 rounded-full ${index < difficultyBars ? 'bg-indigo-400' : 'bg-slate-700/60'}`}
+            />
+          ))}
+        </div>
+      </div>
 
       {/* Hover Overlay Icon */}
       <div className={`absolute inset-0 bg-black/10 flex items-center justify-center transition-opacity duration-200 ${isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>

@@ -1,4 +1,4 @@
-import { PDFMetadata, WordItem } from '../types';
+import { DocumentMapItem, PDFMetadata, WordItem } from '../types';
 
 // Regex patterns to identify technical chunks that should stick together
 const PATTERNS = {
@@ -12,6 +12,52 @@ const PATTERNS = {
   CITATION: /^\[\s*[\d,\-]+\s*\]$/,
   // Matches simple math/logic operators inside words (e.g., "p<0.05")
   MATH: /[<>=≈]/
+};
+
+const FIGURE_LINE = /(Figure|Fig\.|Table|Tab\.)\s*([0-9]+[a-z]?)/i;
+
+const groupLines = (items: any[]) => {
+  const lines: Array<{ y: number; height: number; items: any[] }> = [];
+  const tolerance = 2;
+
+  const sorted = [...items].sort((a, b) => {
+    const yDiff = b.transform[5] - a.transform[5];
+    if (Math.abs(yDiff) > tolerance) return yDiff;
+    return a.transform[4] - b.transform[4];
+  });
+
+  for (const item of sorted) {
+    const y = item.transform[5];
+    const height = item.height || 0;
+    const existing = lines.find((line) => Math.abs(line.y - y) <= tolerance);
+    if (existing) {
+      existing.items.push(item);
+      existing.height = Math.max(existing.height, height);
+    } else {
+      lines.push({ y, height, items: [item] });
+    }
+  }
+
+  return lines.map((line) => {
+    const text = line.items
+      .sort((a, b) => a.transform[4] - b.transform[4])
+      .map((item) => item.str)
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return { text, height: line.height };
+  });
+};
+
+const isLikelyHeading = (text: string, height: number, medianHeight: number) => {
+  if (!text || text.length < 4) return false;
+  const wordCount = text.split(' ').length;
+  if (wordCount > 12 || text.length > 90) return false;
+  const letters = text.replace(/[^A-Za-z]/g, '');
+  const upperRatio = text.replace(/[^A-Z]/g, '').length / Math.max(letters.length, 1);
+  const looksUpper = upperRatio > 0.6;
+  const looksTitle = /^[A-Z][A-Za-z0-9]/.test(text);
+  return height >= medianHeight * 1.2 || looksUpper || looksTitle;
 };
 
 const tokenizeText = (text: string, pageNum: number): WordItem[] => {
@@ -74,6 +120,8 @@ export const extractTextFromPDF = async (file: File): Promise<PDFMetadata> => {
         
         let allWords: WordItem[] = [];
         let fullRawText = '';
+        const mapItems: DocumentMapItem[] = [];
+        const figureIndex: Record<string, number> = {};
         const totalPages = pdf.numPages;
 
         for (let i = 1; i <= totalPages; i++) {
@@ -84,6 +132,35 @@ export const extractTextFromPDF = async (file: File): Promise<PDFMetadata> => {
           const pageText = textContent.items
             .map((item: any) => item.str)
             .join(' ');
+
+          const itemHeights = textContent.items
+            .map((item: any) => item.height)
+            .filter((value: number) => value && value > 0)
+            .sort((a: number, b: number) => a - b);
+          const medianHeight =
+            itemHeights.length > 0
+              ? itemHeights[Math.floor(itemHeights.length / 2)]
+              : 0;
+
+          const lines = groupLines(textContent.items);
+          for (const line of lines) {
+            if (!line.text) continue;
+            const match = line.text.match(FIGURE_LINE);
+            if (match) {
+              const label = match[1].toLowerCase();
+              const number = match[2];
+              const type = label.startsWith('tab') ? 'table' : 'figure';
+              mapItems.push({ type, text: line.text, page: i });
+              if (!figureIndex[number]) {
+                figureIndex[number] = i;
+              }
+              continue;
+            }
+
+            if (isLikelyHeading(line.text, line.height, medianHeight)) {
+              mapItems.push({ type: 'heading', text: line.text, page: i });
+            }
+          }
           
           // Tokenize this page specifically
           const pageWords = tokenizeText(pageText, i);
@@ -100,7 +177,9 @@ export const extractTextFromPDF = async (file: File): Promise<PDFMetadata> => {
           totalPages: totalPages,
           words: allWords,
           rawContent: fullRawText,
-          fileData: arrayBuffer // Return the original, intact buffer
+          fileData: arrayBuffer, // Return the original, intact buffer
+          mapItems,
+          figureIndex
         });
       } catch (error) {
         reject(error);

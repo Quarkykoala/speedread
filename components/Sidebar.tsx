@@ -1,25 +1,31 @@
 import React, { useState } from 'react';
 import { extractTextFromPDF } from '../services/pdfService';
 import { analyzeText } from '../services/geminiService';
-import { PDFMetadata, AIAnalysis, ReadingMode } from '../types';
+import { DocumentMapItem, PDFMetadata, AIAnalysis, ReadingMode } from '../types';
 import { PDFPageViewer } from './PDFPageViewer';
 
 interface SidebarProps {
-  onLoadDocument: (words: any[], rawText: string, fileData: ArrayBuffer) => void;
+  onLoadDocument: (metadata: PDFMetadata) => void;
   currentText: string;
   mode: ReadingMode;
   currentPDFData: ArrayBuffer | null;
   currentPage: number;
+  mapItems: DocumentMapItem[];
+  onRequestPage: (page: number) => void;
+  onClearPageOverride: () => void;
 }
 
-type Tab = 'upload' | 'context' | 'ai';
+type Tab = 'upload' | 'context' | 'ai' | 'map';
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
   onLoadDocument, 
   currentText, 
   mode,
   currentPDFData,
-  currentPage
+  currentPage,
+  mapItems,
+  onRequestPage,
+  onClearPageOverride
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('upload');
   const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     try {
       const metadata: PDFMetadata = await extractTextFromPDF(file);
-      onLoadDocument(metadata.words, metadata.rawContent, metadata.fileData);
+      onLoadDocument(metadata);
       setActiveTab('context'); // Auto switch to context view
     } catch (err) {
       setError('Failed to extract text from PDF.');
@@ -97,19 +103,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
         
         {/* Navigation Tabs */}
         <div className="flex space-x-1 bg-slate-900/50 p-1 rounded-lg">
-          <button 
+          <button
             onClick={() => setActiveTab('upload')}
             className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'upload' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
           >
             Upload
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('context')}
             className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'context' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
           >
             Doc View
           </button>
-          <button 
+          <button
+            onClick={() => setActiveTab('map')}
+            className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'map' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+          >
+            Map
+          </button>
+          <button
             onClick={() => setActiveTab('ai')}
             className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${activeTab === 'ai' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
           >
@@ -200,6 +212,50 @@ export const Sidebar: React.FC<SidebarProps> = ({
                    This view automatically syncs with the word currently being read.
                  </p>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: MAP */}
+        {activeTab === 'map' && (
+          <div className="space-y-4">
+            {!mapItems.length ? (
+              <div className="text-slate-500 text-sm text-center mt-6">
+                Upload a PDF to generate a skim map.
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between text-xs uppercase tracking-wide font-bold text-slate-400">
+                  <span>Skim Map</span>
+                  <button
+                    onClick={onClearPageOverride}
+                    className="text-indigo-400 hover:underline text-xs"
+                  >
+                    Follow Reader
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Spend 60 seconds scanning headings and figures before you start. Click any item to jump the viewer.
+                </p>
+                <div className="space-y-2">
+                  {mapItems.slice(0, 20).map((item, idx) => (
+                    <button
+                      key={`${item.type}-${item.page}-${idx}`}
+                      onClick={() => {
+                        onRequestPage(item.page);
+                        setActiveTab('context');
+                      }}
+                      className="w-full text-left bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-2 hover:border-indigo-500/50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span className="uppercase tracking-wide">{item.type}</span>
+                        <span>Page {item.page}</span>
+                      </div>
+                      <div className="text-sm text-slate-200 mt-1 truncate">{item.text}</div>
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}

@@ -5,6 +5,12 @@ export interface WordItem {
   page: number; // The PDF page this word belongs to
 }
 
+export interface DocumentMapItem {
+  type: 'heading' | 'figure' | 'table';
+  text: string;
+  page: number;
+}
+
 export interface ReaderState {
   words: WordItem[];
   currentIndex: number;
@@ -19,6 +25,8 @@ export interface PDFMetadata {
   words: WordItem[]; // Changed from simple string to structured items
   rawContent: string; // For AI analysis
   fileData: ArrayBuffer; // To render the visual PDF
+  mapItems: DocumentMapItem[];
+  figureIndex: Record<string, number>;
 }
 
 export interface AIAnalysis {
