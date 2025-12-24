@@ -96,6 +96,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+  const renderChatContent = (content: string) => {
+    const blocks = content
+      .split(/\n{2,}/)
+      .map((block) => block.trim())
+      .filter(Boolean);
+
+    return blocks.map((block, blockIndex) => {
+      const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
+      const isList = lines.length > 1 && lines.every((line) => /^[-*]\s+/.test(line));
+
+      if (isList) {
+        return (
+          <ul key={`list-${blockIndex}`} className="list-disc list-inside space-y-1">
+            {lines.map((line, lineIndex) => (
+              <li key={`list-${blockIndex}-${lineIndex}`}>{line.replace(/^[-*]\s+/, '')}</li>
+            ))}
+          </ul>
+        );
+      }
+
+      return (
+        <p key={`para-${blockIndex}`} className="leading-relaxed">
+          {block}
+        </p>
+      );
+    });
+  };
+
   const adjustZoom = (delta: number) => {
     setZoomLevel(prev => {
       let current = prev === 'fit' ? 1.0 : prev;
@@ -339,8 +367,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       key={`${message.role}-${idx}`}
                       className={`text-sm ${message.role === 'user' ? 'text-slate-200 text-right' : 'text-slate-300'}`}
                     >
-                      <span className={`inline-block rounded-lg px-3 py-2 ${message.role === 'user' ? 'bg-indigo-600/30 border border-indigo-500/40' : 'bg-slate-800 border border-slate-700'}`}>
-                        {message.content}
+                      <span className={`inline-block rounded-lg px-3 py-2 space-y-2 ${message.role === 'user' ? 'bg-indigo-600/30 border border-indigo-500/40' : 'bg-slate-800 border border-slate-700'}`}>
+                        {message.role === 'assistant' ? renderChatContent(message.content) : message.content}
                       </span>
                     </div>
                   ))
