@@ -1,0 +1,5 @@
+{
+  "name": "HyperRead AI",
+  "description": "A high-performance speed reader using RSVP (Rapid Serial Visual Presentation) technology. Supports PDF uploads and includes Gemini-powered content summarization.",
+  "requestFramePermissions": []
+}
